@@ -16,7 +16,7 @@ export type Options = {
      * If enabled, Vue will emit code for rendering SSR pages.
      */
     renderSSR?: boolean;
-    
+
     /**
      * @deprecated Use pathAliases instead.
      */
@@ -36,7 +36,7 @@ export type Options = {
 
     /**
      * Strategy to use when generating IDs for components.
-     * 
+     *
      * If set to "hash", the ID will be derived from the .vue file path.
      * If set to an object with a "random" property, a random ID will be generated.
      * If "random" is set to a string, the random generator will be seeded with said string.
@@ -49,8 +49,14 @@ export type Options = {
     disableCache?: boolean;
 
     /**
+     * Enable Reactivity Transform (EXPERIMENTAL)
+     * https://github.com/vuejs/rfcs/discussions/369
+     */
+    reactivityTransform?: boolean;
+
+    /**
      * Custom directives will be transformed according to the value in this object.
-     * 
+     *
      * If the value is a string, a property with that name will be added to the element with the same value as the directive.
      * If the value is a function and it returns a string, the same behaviour as the former case will be performed.
      * If the value is false, no property will be added.
