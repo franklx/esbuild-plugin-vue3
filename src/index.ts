@@ -129,10 +129,10 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const { descriptor } = sfc.parse(source, {
                 filename
             });
-            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id /*, reactivityTransform: true*/ }) : undefined;
+            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id , reactivityTransform: true }) : undefined;
 
             const dataId = `data-v-${id}`;
-            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; ` : "const script = {}; ";
+            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; export * from "${encPath}?type=script"; ` : "const script = {}; ";
 
             for (const style in descriptor.styles) {
                 code += `import "${encPath}?type=style&index=${style}"; `
