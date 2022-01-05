@@ -55,19 +55,15 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                         type: 16
                     }
 
-                    if (typeof propName === "function") {
-                        transforms[name] = (...args) => {
-                            const ret = propName(args[0], args[1], args[2]);
+                    transforms[name] = typeof propName === "function" ? (...args) => {
+                        const ret = propName(args[0], args[1], args[2]);
 
-                            return {
-                                props: ret === undefined ? [] : [transformation(args[0], ret)]
-                            }
+                        return {
+                            props: ret === undefined ? [] : [transformation(args[0], ret)]
                         }
-                    } else {
-                        transforms[name] = dir => ({
-                            props: propName === false ? [] : [transformation(dir, propName)]
-                        })
-                    }
+                    } : dir => ({
+                        props: propName === false ? [] : [transformation(dir, propName)]
+                    });
                 }
             }
         }
@@ -125,7 +121,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
             const source = await fs.promises.readFile(args.path, 'utf8');
             const filename = path.relative(process.cwd(), args.path);
-            
+
             const id = !opts.scopeId || opts.scopeId === "hash"
                 ? crypto.createHash("md5").update(filename).digest().toString("hex").substring(0, 8)
                 : random(4).toString("hex");
@@ -133,34 +129,34 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const { descriptor } = sfc.parse(source, {
                 filename
             });
-            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id }) : undefined;
+            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id /*, reactivityTransform: true*/ }) : undefined;
 
-            const dataId = "data-v-" + id;
-            let code = "";
-
-            if (descriptor.script || descriptor.scriptSetup) {
-                code += `import script from "${encPath}?type=script";`
-            } else {
-                code += "const script = {};"
-            }
+            const dataId = `data-v-${id}`;
+            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; ` : "const script = {}; ";
 
             for (const style in descriptor.styles) {
-                code += `import "${encPath}?type=style&index=${style}";`
+                code += `import "${encPath}?type=style&index=${style}"; `
             }
 
             const renderFuncName = opts.renderSSR ? "ssrRender" : "render";
 
-            code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName};`
+            code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName}; `
 
-            code += `script.__file = ${JSON.stringify(filename)};`;
+            code += `script.__file = ${JSON.stringify(filename)}; `;
+
             if (descriptor.styles.some(o => o.scoped)) {
-                code += `script.__scopeId = ${JSON.stringify(dataId)};`;
+                code += `script.__scopeId = ${JSON.stringify(dataId)}; `;
             }
+
             if (opts.renderSSR) {
-                code += "script.__ssrInlineRender = true;";
+                code += "script.__ssrInlineRender = true; ";
             }
-            
-            code += "export default script;";
+
+            if (descriptor.scriptSetup) {
+                code += "const setup = script.setup; export { setup }; ";
+            }
+
+            code += `export { script as default, ${renderFuncName} }; `;
 
             return {
                 contents: code,
@@ -178,8 +174,8 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
                 if (buildOpts.sourcemap && script.map) {
                     const sourceMap = Buffer.from(JSON.stringify(script.map)).toString("base64");
-                    
-                    code += "\n\n//@ sourceMappingURL=data:application/json;charset=utf-8;base64," + sourceMap;
+
+                    code += `\n\n//@ sourceMappingURL=data:application/json;charset=utf-8;base64,${sourceMap}`;
                 }
 
                 return {
@@ -235,7 +231,6 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     })
                 }
             }
-
             return {
                 contents: result.code,
                 warnings: result.tips.map(o => ({ text: o })),
@@ -248,7 +243,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const { descriptor, index, id } = args.pluginData as PluginData & { index: number };
 
             const style: import("@vue/compiler-sfc").SFCStyleBlock = descriptor.styles[index];
-            let includedFiles: string[] = [];
+            const includedFiles: string[] = [];
 
             const result = await sfc.compileStyleAsync({
                 filename: args.path,
@@ -314,7 +309,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     : buildOpts.outfile
                     ? path.dirname(buildOpts.outfile)
                     : undefined;
-                
+
                 opts.generateHTML.trimPath ??= outDir;
                 opts.generateHTML.pathPrefix ??= "/";
                 opts.generateHTML.outFile ??= outDir && path.join(outDir, "index.html");
