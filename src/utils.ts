@@ -3,7 +3,7 @@ import { OnResolveArgs } from "esbuild";
 import * as path from "path";
 
 export function getUrlParams(search: string): Record<string, string> {
-    let hashes = search.slice(search.indexOf('?') + 1).split('&')
+    const hashes = search.slice(search.indexOf('?') + 1).split('&');
     return hashes.reduce((params, hash) => {
         let [key, val] = hash.split('=')
         return Object.assign(params, {[key]: decodeURIComponent(val)})
@@ -41,7 +41,7 @@ export class AsyncCache<TKey = any> {
             return fn();
         }
 
-        let val = this.store.get(key);
+        const val = this.store.get(key);
         if (!val) {
             return fn().then(o => (this.store.set(key, o), o));
         }
