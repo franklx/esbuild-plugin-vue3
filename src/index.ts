@@ -132,7 +132,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id , reactivityTransform: !!opts.reactivityTransform }) : undefined;
 
             const dataId = `data-v-${id}`;
-            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; export * from "${encPath}?type=script"; ` : "const script = {}; ";
+            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; ` : "const script = {}; ";
 
             for (const style in descriptor.styles) {
                 code += `import "${encPath}?type=style&index=${style}"; `
@@ -177,7 +177,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
                     code += `\n\n//@ sourceMappingURL=data:application/json;charset=utf-8;base64,${sourceMap}`;
                 }
-
+                //fs.writeFileSync(`_out_${path.basename(args.path)}`, code);
                 return {
                     contents: code,
                     loader: script.lang === "ts" ? "ts" : "js",
@@ -217,7 +217,6 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     bindingMetadata: script?.bindings
                 }
             });
-
             if (result.errors.length > 0) {
                 return {
                     errors: result.errors.map<esbuild.PartialMessage>(o => typeof o === "string" ? { text: o } : {
@@ -231,6 +230,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     })
                 }
             }
+            //fs.writeFileSync(`_out_${path.basename(args.path)}`, result.code);
             return {
                 contents: result.code,
                 warnings: result.tips.map(o => ({ text: o })),
@@ -287,7 +287,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     }))
                 }
             }
-
+            //fs.writeFileSync(`_out_${path.basename(args.path)}`, result.code);
             return {
                 contents: result.code,
                 loader: "css",
