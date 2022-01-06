@@ -152,11 +152,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 code += "script.__ssrInlineRender = true; ";
             }
 
-            if (descriptor.scriptSetup) {
-                code += "const setup = script.setup; export { setup }; ";
-            }
-
-            code += `export { script as default, ${renderFuncName} }; `;
+            code += "module.exports = script"
 
             return {
                 contents: code,
