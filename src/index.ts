@@ -210,7 +210,8 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 compilerOptions: {
                     inSSR: opts.renderSSR,
                     directiveTransforms: transforms,
-                    bindingMetadata: script?.bindings
+                    bindingMetadata: script?.bindings,
+                    expressionPlugins: script?.lang === "ts" ? ['typescript']: [],
                 }
             });
             if (result.errors.length > 0) {

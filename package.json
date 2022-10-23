@@ -1,6 +1,6 @@
 {
   "name": "@franklx/esbuild-plugin-vue3",
-  "version": "0.3.4",
+  "version": "0.3.6",
   "description": "[![npm version](https://badge.fury.io/js/esbuild-plugin-vue3.svg)](https://badge.fury.io/js/esbuild-plugin-vue3)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
