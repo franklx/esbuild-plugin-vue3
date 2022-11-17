@@ -1,6 +1,6 @@
 {
   "name": "@franklx/esbuild-plugin-vue3",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "[![npm version](https://badge.fury.io/js/esbuild-plugin-vue3.svg)](https://badge.fury.io/js/esbuild-plugin-vue3)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,9 +16,9 @@
     "url": "git+https://github.com/franklx/esbuild-plugin-vue3.git"
   },
   "dependencies": {
-    "@vue/compiler-core": "^3.2.41",
-    "@vue/compiler-sfc": "^3.2.41",
-    "esbuild": "^0.15.12"
+    "@vue/compiler-core": "^3.2.45",
+    "@vue/compiler-sfc": "^3.2.45",
+    "esbuild": "^0.16.2"
   },
   "keywords": [
     "esbuild",
@@ -48,14 +48,14 @@
     }
   },
   "devDependencies": {
-    "@babel/types": "^7.19.4",
+    "@babel/types": "^7.20.5",
     "@types/html-minifier": "^4.0.2",
     "@types/pug": "^2.0.6",
     "@types/sass": "^1.43.1",
     "cheerio": "^1.0.0-rc.12",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
-    "typescript": "^4.8.4"
+    "typescript": "^4.9.4"
   },
   "files": [
     "dist/*.js",
