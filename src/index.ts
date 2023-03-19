@@ -36,7 +36,9 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             build.onStart(() => ({warnings: [{text: "The disableResolving option is deprecated, use pathAliases instead"}]}));
         }
 
-        const mustReplace = await loadRules(opts);
+        const generatedCSS: string[] = [];
+
+        const mustReplace = await loadRules(opts, buildOpts.tsconfig ?? "tsconfig.json");
 
         const random = randomBytes(typeof opts.scopeId === "object" && typeof opts.scopeId.random === "string" ? opts.scopeId.random : undefined);
 
@@ -132,7 +134,9 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id , reactivityTransform: !!opts.reactivityTransform }) : undefined;
 
             const dataId = `data-v-${id}`;
-            let code = descriptor.script || descriptor.scriptSetup ? `import script from "${encPath}?type=script"; ` : "const script = {}; ";
+            let code = descriptor.script || descriptor.scriptSetup ?
+                `import script from "${(descriptor.script && !descriptor.scriptSetup && descriptor.script.src) || encPath}?type=script"; `
+                : "const script = {}; ";
 
             for (const style in descriptor.styles) {
                 code += `import "${encPath}?type=style&index=${style}"; `
@@ -212,6 +216,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     directiveTransforms: transforms,
                     bindingMetadata: script?.bindings,
                     expressionPlugins: script?.lang === "ts" ? ['typescript']: [],
+                    ...opts.compilerOptions
                 }
             });
             if (result.errors.length > 0) {
@@ -231,7 +236,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             return {
                 contents: result.code,
                 warnings: result.tips.map(o => ({ text: o })),
-                loader: "js",
+                loader: "ts",
                 resolveDir: path.dirname(args.path),
             }
         }));
@@ -249,7 +254,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 postcssOptions: opts.postcss?.options,
                 postcssPlugins: opts.postcss?.plugins,
                 preprocessLang: style.lang as any,
-                preprocessOptions: {
+                preprocessOptions: Object.assign({
                     includePaths: [
                         path.dirname(args.path)
                     ],
@@ -265,7 +270,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                         },
                         (url: string) => ({ file: replaceRules(url) })
                     ]
-                },
+                }, opts.preprocessorOptions),
                 scoped: style.scoped,
             });
 
@@ -284,7 +289,34 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     }))
                 }
             }
-            //fs.writeFileSync(`_out_${path.basename(args.path)}`, result.code);
+
+            if (opts.cssInline) {
+                if (opts.generateHTML) {
+                    generatedCSS.push(result.code);
+
+                    // If we are generating HTML all styles will be added to it when building ends,
+                    // so return an empty file here.
+                    return {
+                        contents: "",
+                        loader: "js"
+                    }
+                }
+
+                const cssText =  result.code;
+                const contents = `
+                {
+                    const el = document.createElement("style");
+                    el.textContent = ${JSON.stringify(cssText)};
+                    document.head.append(el);
+                }`;
+                return {
+                    contents,
+                    loader: "js",
+                    resolveDir: path.dirname(args.path),
+                    watchFiles: includedFiles
+                };
+            }
+
             return {
                 contents: result.code,
                 loader: "css",
@@ -311,7 +343,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 opts.generateHTML.pathPrefix ??= "/";
                 opts.generateHTML.outFile ??= outDir && path.join(outDir, "index.html");
 
-                await generateIndexHTML(result, opts.generateHTML, buildOpts.minify ?? false);
+                await generateIndexHTML(result, opts.generateHTML, buildOpts.minify ?? false, opts.cssInline ? generatedCSS : undefined);
             }
         });
     }

@@ -1,6 +1,7 @@
 import { fileExists } from "./utils";
 import { Options } from "./options";
-import ts from "typescript";
+import * as fs from "fs";
+import { parseConfigFileTextToJson } from "typescript";
 
 type Rule = { regex: RegExp, replacement: string }
 
@@ -9,7 +10,7 @@ const rules: Rule[] = [];
 /**
  * @returns true if there are any rules to apply, false otherwise.
  */
-export async function loadRules(opts: Options): Promise<boolean> {
+export async function loadRules(opts: Options, tsconfigPath: string): Promise<boolean> {
     if (opts.pathAliases === false) {
         return false;
     }
@@ -25,18 +26,21 @@ export async function loadRules(opts: Options): Promise<boolean> {
             });
         }
     } else {
-        await loadFromTsconfig();
+        await loadFromTsconfig(tsconfigPath);
     }
 
     return rules.length > 0;
 }
 
-async function loadFromTsconfig() {
-    if (!await fileExists("tsconfig.json")) {
+async function loadFromTsconfig(path: string) {
+    if (!await fileExists(path)) {
         return;
     }
 
-    const tsconfig = ts.readConfigFile("tsconfig.json", ts.sys.readFile)?.config;
+    const { config: tsconfig, error } = parseConfigFileTextToJson(path, (await fs.promises.readFile(path)).toString())
+    if (error) {
+        throw new Error(`Failed to parse tsconfig.json: ${JSON.stringify(error)}`);
+    }
 
     if (!tsconfig?.compilerOptions?.paths) {
         return;

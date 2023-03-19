@@ -1,4 +1,4 @@
-import { DirectiveNode, ElementNode, TransformContext } from "@vue/compiler-core";
+import { CompilerOptions, DirectiveNode, ElementNode, TransformContext } from "@vue/compiler-core";
 import { IndexOptions } from "./html";
 
 export type Options = {
@@ -70,4 +70,26 @@ export type Options = {
         options?: any;
         plugins?: any[];
     }
+
+    /**
+     * If enabled, Single File Components' CSS will be combined into the output JS files and added to <head> at runtime.
+     * If generateHTML is also enabled, the CSS <style> blocks will instead be added to the generated HTML file.
+     * 
+     * By default, separate CSS files will be generated.
+     */
+    cssInline?: boolean;
+
+    /**
+     * Option to add custom compiler options for vue sfc
+     */
+    compilerOptions?: CompilerOptions;
+
+    /**
+     * Option to pass to CSS preprocessor options in the Vue SFC compiler
+     * 
+     * Less: https://lesscss.org/usage/#less-options
+     * 
+     * SCSS: https://sass-lang.com/documentation/js-api/interfaces/Options
+     */
+    preprocessorOptions?: any; // any is the same type as compiler-sfc.d.ts allows it.
 }
