@@ -291,6 +291,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             }
 
             if (opts.cssInline) {
+                /*
                 if (opts.generateHTML) {
                     generatedCSS.push(result.code);
 
@@ -301,6 +302,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                         loader: "js"
                     }
                 }
+                */
 
                 const cssText =  result.code;
                 const contents = `
