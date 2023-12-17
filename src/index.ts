@@ -1,4 +1,4 @@
-import * as esbuild from "esbuild";
+import type { PartialMessage, Plugin } from "esbuild";
 import * as path from "path";
 import * as fs from 'fs';
 import * as crypto from "crypto";
@@ -18,7 +18,7 @@ type PluginData = {
     script?: sfc.SFCScriptBlock;
 }
 
-const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
+const vuePlugin = (opts: Options = {}) => <Plugin>{
     name: "vue",
     async setup({ initialOptions: buildOpts, ...build }) {
         buildOpts.define = {
@@ -221,7 +221,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             });
             if (result.errors.length > 0) {
                 return {
-                    errors: result.errors.map<esbuild.PartialMessage>(o => typeof o === "string" ? { text: o } : {
+                    errors: result.errors.map<PartialMessage>(o => typeof o === "string" ? { text: o } : {
                         text: o.message,
                         location: o.loc && {
                             column: o.loc.start.column,

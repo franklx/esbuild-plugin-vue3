@@ -1,4 +1,4 @@
-import { BuildResult } from "esbuild";
+import type { BuildResult } from "esbuild";
 import * as fs from "fs";
 import * as path from "path";
 import { tryAsync as tryImport } from "./utils";

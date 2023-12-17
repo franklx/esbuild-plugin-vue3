@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { OnResolveArgs } from "esbuild";
+import type { OnResolveArgs } from "esbuild";
 import * as path from "path";
 
 export function getUrlParams(search: string): Record<string, string> {
