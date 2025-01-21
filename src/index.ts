@@ -3,6 +3,8 @@ import * as path from "path";
 import * as fs from 'fs';
 import * as crypto from "crypto";
 
+import ts from "typescript";
+
 import * as sfc from '@vue/compiler-sfc';
 import * as core from '@vue/compiler-core';
 
@@ -24,7 +26,8 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
         buildOpts.define = {
             ...buildOpts.define,
             "__VUE_OPTIONS_API__": opts.disableOptionsApi ? "false" : "true",
-            "__VUE_PROD_DEVTOOLS__": opts.enableDevTools ? "true" : "false"
+            "__VUE_PROD_DEVTOOLS__": opts.enableDevTools ? "true" : "false",
+            "__VUE_PROD_HYDRATION_MISMATCH_DETAILS__": opts.enableHydrationMismatchDetails ? "true" : "false",
         }
 
         if (opts.generateHTML && !buildOpts.metafile) {
@@ -131,7 +134,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const { descriptor } = sfc.parse(source, {
                 filename
             });
-            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id }) : undefined;
+            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id, fs: ts.sys }) : undefined;
 
             const dataId = `data-v-${id}`;
             let code = descriptor.script || descriptor.scriptSetup ?
@@ -144,9 +147,10 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
             const renderFuncName = opts.renderSSR ? "ssrRender" : "render";
 
-            code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName}; `
-
-            code += `script.__file = ${JSON.stringify(filename)}; `;
+            if (descriptor.template) {
+                code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName}; `
+                code += `script.__file = ${JSON.stringify(filename)}; `;
+            }
 
             if (descriptor.styles.some(o => o.scoped)) {
                 code += `script.__scopeId = ${JSON.stringify(dataId)}; `;
@@ -189,7 +193,10 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
         build.onLoad({ filter: /.*/, namespace: "sfc-template" }, (args) => cache.get([args.path, args.namespace], async () => {
             const { descriptor, id, script } = args.pluginData as PluginData;
             if (!descriptor.template) {
-                throw new Error("Missing template");
+                return {
+                    loader: "js",
+                    contents: ""
+                }
             }
 
             let source = descriptor.template.content;
@@ -260,7 +267,8 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     ],
                     importer: [
                         (url: string) => {
-                            const modulePath = path.join(process.cwd(), "node_modules", url);
+                            const projectRoot = process.env.npm_config_local_prefix || process.cwd()
+                            const modulePath = path.join(projectRoot, "node_modules", url);
 
                             if (fs.existsSync(modulePath)) {
                                 return { file: modulePath }
