@@ -131,7 +131,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             const { descriptor } = sfc.parse(source, {
                 filename
             });
-            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id , reactivityTransform: !!opts.reactivityTransform }) : undefined;
+            const script = (descriptor.script || descriptor.scriptSetup) ? sfc.compileScript(descriptor, { id }) : undefined;
 
             const dataId = `data-v-${id}`;
             let code = descriptor.script || descriptor.scriptSetup ?

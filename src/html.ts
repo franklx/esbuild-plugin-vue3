@@ -40,9 +40,9 @@ export type IndexOptions = {
     }[];
 
     /**
-     * When minifying, these options will be passed to html-minifier.
+     * When minifying, these options will be passed to html-minifier-terser.
      */
-    minifyOptions?: import("html-minifier").Options;
+    minifyOptions?: import("html-minifier-terser").Options;
 }
 
 export async function generateIndexHTML(result: BuildResult, opts: IndexOptions, min: boolean, inlineStyles?: string[]) {
@@ -102,9 +102,9 @@ export async function generateIndexHTML(result: BuildResult, opts: IndexOptions,
     let html = $.html();
 
     if (min) {
-        const { minify } = await tryImport(() => import("html-minifier"), "html-minifier", "HTML minification")
+        const { minify } = await tryImport(() => import("html-minifier-terser"), "html-minifier-terser", "HTML minification")
 
-        html = minify(html, {
+        html = await minify(html, {
             collapseWhitespace: true,
             minifyCSS: true,
             removeComments: true,

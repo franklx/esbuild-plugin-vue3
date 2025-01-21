@@ -49,12 +49,6 @@ export type Options = {
     disableCache?: boolean;
 
     /**
-     * Enable Reactivity Transform (EXPERIMENTAL)
-     * https://github.com/vuejs/rfcs/discussions/369
-     */
-    reactivityTransform?: boolean;
-
-    /**
      * Custom directives will be transformed according to the value in this object.
      *
      * If the value is a string, a property with that name will be added to the element with the same value as the directive.
